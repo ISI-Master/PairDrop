@@ -1,0 +1,36 @@
+name: Sync PairDrop Fork with Upstream
+
+on:
+  schedule:
+    # Läuft jeden Tag um 02:00 UTC
+    - cron: '0 2 * * *'
+  # Erlaubt manuelle Ausführung des Workflows über die GitHub UI
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    name: Sync fork with upstream
+
+    steps:
+      # Repository auschecken mit PAT für Repository-Zugriff
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: master
+          # Verwendet das bereits existierende PAT Secret
+          token: ${{ secrets.PAT }}
+
+      # Upstream-Repository als Remote hinzufügen mit PAT
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://x-access-token:${{ secrets.PAT }}@github.com/schlagmichdoch/PairDrop.git
+          git fetch upstream
+
+      # Upstream-Änderungen holen und mergen
+      - name: Sync fork with upstream
+        run: |
+          git checkout master
+          git merge upstream/master
+          git push origin master
